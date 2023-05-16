@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData" autoUpload="Always" serverName="xnmaster@ml-lab-f16b9785-93b3-4cf9-952d-b7314da22250.westeurope.cloudapp.azure.com:53311 password" remoteFilesAllowedToDisappearOnAutoupload="false">
+    <serverData>
+      <paths name="xnmaster@ml-lab-f16b9785-93b3-4cf9-952d-b7314da22250.westeurope.cloudapp.azure.com:53311 password">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/home/xnmaster/projecte" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
+    </serverData>
+    <option name="myAutoUpload" value="ALWAYS" />
+  </component>
+</project>
