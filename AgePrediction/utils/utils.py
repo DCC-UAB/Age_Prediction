@@ -2,7 +2,6 @@ import os
 import torch
 import pandas as pd
 from PIL import Image
-# from datasets import *
 import torch.nn.functional as F
 from torchvision import transforms
 from torch.utils.data import Dataset
@@ -102,7 +101,7 @@ def df_loader(train_p, valid_p, test_p, image_p, batch_size, n_workers):
                              batch_size=batch_size,
                              shuffle=False,
                              num_workers=n_workers)
-    return train_loader, valid_loader, test_loader
+    return train_loader, valid_loader, test_loader, len(train_dataset)
 
 
 def cost_fn(nom_model, logits=None, levels=None, imp=None, targets=None):
@@ -131,8 +130,8 @@ def compute_mae_and_mse_ce(model, data_loader, device):
         num_examples += targets.size(0)
         mae += torch.sum(torch.abs(predicted_labels - targets))
         mse += torch.sum((predicted_labels - targets) ** 2)
-    mae = float(mae) / num_examples
-    mse = float(mse) / num_examples
+    mae = mae.float() / num_examples
+    mse = mse.float() / num_examples
     return mae, mse
 
 
@@ -148,8 +147,8 @@ def compute_mae_and_mse_coral(model, data_loader, device):
         num_examples += targets.size(0)
         mae += torch.sum(torch.abs(predicted_labels - targets))
         mse += torch.sum((predicted_labels - targets) ** 2)
-    mae = float(mae) / num_examples
-    mse = float(mse) / num_examples
+    mae = mae.float() / num_examples
+    mse = mse.float() / num_examples
     return mae, mse
 
 
@@ -165,8 +164,8 @@ def compute_mae_and_mse_ordinal(model, data_loader, device):
         num_examples += targets.size(0)
         mae += torch.sum(torch.abs(predicted_labels - targets))
         mse += torch.sum((predicted_labels - targets) ** 2)
-    mae = float(mae) / num_examples
-    mse = float(mse) / num_examples
+    mae = mae.float() / num_examples
+    mse = mse.float() / num_examples
     return mae, mse
 
 
