@@ -131,6 +131,18 @@ best_mae, best_rmse, best_epoch = 999, 999, -1
 for epoch in range(num_epochs):
     model.train()
 
-    # FICARHO EN UNA FUNCIO SEPARAT???
-    for batch_idx, () in enumerate(train_loader):
-        s=0
+    # si ho ajuntem en fem 2 i sumem!!! (debug a coral!)
+    for batch_idx, tupla in enumerate(train_loader):
+        if(LOSS=='ce'):
+            # Descomprimim tupla aqui! i deixem levels buit!
+            s=0
+        else:
+            # Descomprimim tupla aqui amb tot!
+            s=0
+
+        # FORWARD AND BACK PROP
+        logits, probas = model(features)
+        cost = cost_fn(nom_model=LOSS, logits=logits, levels=levels, imp=imp)
+        optimizer.zero_grad()
+        cost.backward()
+
