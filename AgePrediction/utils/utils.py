@@ -1,16 +1,48 @@
+import os
 import torch
-from utils.datasets import *   ##############
+import pandas as pd
+from PIL import Image
+# from datasets import *
 import torch.nn.functional as F
 from torchvision import transforms
+from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
+
+
+## DOC datasets.py
+class AFADDatasetAge(Dataset):
+    """Custom Dataset for loading AFAD face images"""
+
+    def __init__(self, csv_path, img_dir, transform=None):
+        df = pd.read_csv(csv_path, index_col=0)
+        self.img_dir = img_dir
+        self.csv_path = csv_path
+        self.img_paths = df['path']
+        self.y = df['age'].values
+        self.transform = transform
+
+    def __getitem__(self, index):
+        img = Image.open(os.path.join(self.img_dir,
+                                      self.img_paths[index]))
+
+        if self.transform is not None:
+            img = self.transform(img)
+
+        label = self.y[index]
+
+        return img, label
+
+    def __len__(self):
+        return self.y.shape[0]
+
 
 def return_paths(df):
     ll_df = []
-    if(df=='CACD'):
-        ll_df.append('./afad_train.csv') # path train
-        ll_df.append('./afad_valid.csv') # validation train
-        ll_df.append('./afad_test.csv') # test train
-        ll_df.append('/shared_datasets/AFAD/orig/tarball/AFAD-Full') # path traind
+    if (df == 'CACD'):
+        ll_df.append('./coral-cnn-master/datasets/afad_train.csv')  # path train
+        ll_df.append('./coral-cnn-master/datasets/afad_valid.csv')  # validation train
+        ll_df.append('./coral-cnn-master/datasets/afad_test.csv')  # test train
+        ll_df.append('./coral-cnn-master/datasets/tarball-master/AFAD-Full')  # path traind
         return ll_df
     else:
         print('ERROR AL INDICAR ELS DATASETS')
@@ -36,7 +68,7 @@ def task_importance_weights(label_array, imp_weight, num_classes):
         raise ValueError('Incorrect importance weight parameter.')
 
 
-def df_loader(train_p,  valid_p, test_p, image_p, batch_size, n_workers):
+def df_loader(train_p, valid_p, test_p, image_p, batch_size, n_workers):
     custom_transform = transforms.Compose([transforms.Resize((128, 128)),
                                            transforms.RandomCrop((120, 120)),
                                            transforms.ToTensor()])
@@ -74,20 +106,19 @@ def df_loader(train_p,  valid_p, test_p, image_p, batch_size, n_workers):
 
 
 def cost_fn(nom_model, logits=None, levels=None, imp=None, targets=None):
-    if(nom_model=='ce'):
+    if (nom_model == 'ce'):
         return F.cross_entropy(logits, targets)
-    if(nom_model=='coral'):
+    if (nom_model == 'coral'):
         val = (-torch.sum((F.logsigmoid(logits) * levels
                            + (F.logsigmoid(logits) - logits) * (1 - levels)) * imp,
                           dim=1))
         return torch.mean(val)
-    if(nom_model=='ordinal'):
+    if (nom_model == 'ordinal'):
         val = (-torch.sum((F.log_softmax(logits, dim=2)[:, :, 1] * levels
                            + F.log_softmax(logits, dim=2)[:, :, 0] * (1 - levels)) * imp, dim=1))
         return torch.mean(val)
     else:
         raise ValueError('ERROR EN LA TRIA DE MODEL (cost_fn)')
-
 
 
 def compute_mae_and_mse_ce(model, data_loader, device):
@@ -108,7 +139,6 @@ def compute_mae_and_mse_ce(model, data_loader, device):
 def compute_mae_and_mse_coral(model, data_loader, device):
     mae, mse, num_examples = 0, 0, 0
     for i, (features, targets, levels) in enumerate(data_loader):
-
         features = features.to(device)
         targets = targets.to(device)
 
@@ -117,7 +147,7 @@ def compute_mae_and_mse_coral(model, data_loader, device):
         predicted_labels = torch.sum(predict_levels, dim=1)
         num_examples += targets.size(0)
         mae += torch.sum(torch.abs(predicted_labels - targets))
-        mse += torch.sum((predicted_labels - targets)**2)
+        mse += torch.sum((predicted_labels - targets) ** 2)
     mae = float(mae) / num_examples
     mse = float(mse) / num_examples
     return mae, mse
@@ -126,7 +156,6 @@ def compute_mae_and_mse_coral(model, data_loader, device):
 def compute_mae_and_mse_ordinal(model, data_loader, device):
     mae, mse, num_examples = 0, 0, 0
     for i, (features, targets, levels) in enumerate(data_loader):
-
         features = features.to(device)
         targets = targets.to(device)
 
@@ -135,7 +164,7 @@ def compute_mae_and_mse_ordinal(model, data_loader, device):
         predicted_labels = torch.sum(predict_levels, dim=1)
         num_examples += targets.size(0)
         mae += torch.sum(torch.abs(predicted_labels - targets))
-        mse += torch.sum((predicted_labels - targets)**2)
+        mse += torch.sum((predicted_labels - targets) ** 2)
     mae = float(mae) / num_examples
     mse = float(mse) / num_examples
     return mae, mse

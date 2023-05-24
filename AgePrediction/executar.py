@@ -3,7 +3,7 @@ import sys
 import time
 import argparse
 from utils.utils import *
-from utils.datasets import *
+# from utils.datasets import *
 from models.models import *
 
 
@@ -14,7 +14,7 @@ parser.add_argument('--cuda',
 
 parser.add_argument('--numworkers',
                     type=int,
-                    default=3)
+                    default=6)
 
 parser.add_argument('--seed',
                     type=int,
