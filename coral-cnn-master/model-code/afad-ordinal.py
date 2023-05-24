@@ -23,10 +23,10 @@ from PIL import Image
 
 torch.backends.cudnn.deterministic = True
 
-TRAIN_CSV_PATH = './afad_train.csv'
-VALID_CSV_PATH = './afad_valid.csv'
-TEST_CSV_PATH = './afad_test.csv'
-IMAGE_PATH = '/shared_datasets/AFAD/orig/tarball/AFAD-Full'
+TRAIN_CSV_PATH = './datasets/afad_train.csv'
+VALID_CSV_PATH = './datasets/afad_valid.csv'
+TEST_CSV_PATH = './datasets/afad_test.csv'
+IMAGE_PATH = './datasets/tarball-master/AFAD-Full'
 
 # Argparse helper
 
@@ -41,7 +41,7 @@ parser.add_argument('--seed',
 
 parser.add_argument('--numworkers',
                     type=int,
-                    default=3)
+                    default=6)
 
 
 parser.add_argument('--outpath',
@@ -100,7 +100,7 @@ with open(LOGFILE, 'w') as f:
 
 # Hyperparameters
 learning_rate = 0.0005
-num_epochs = 200
+num_epochs = 2
 
 # Architecture
 NUM_CLASSES = 26

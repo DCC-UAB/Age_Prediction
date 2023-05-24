@@ -37,7 +37,7 @@ parser.add_argument('--cuda',
 
 parser.add_argument('--numworkers',
                     type=int,
-                    default=3)   # canviar el default a maxim, crec q maxim 6
+                    default=6)   # canviar el default a maxim, crec q maxim 6
 
 
 parser.add_argument('--seed',
