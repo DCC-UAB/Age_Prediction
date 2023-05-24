@@ -23,10 +23,10 @@ from PIL import Image
 
 torch.backends.cudnn.deterministic = True
 
-TRAIN_CSV_PATH = './cacd_train.csv'
-VALID_CSV_PATH = './cacd_valid.csv'
-TEST_CSV_PATH = './cacd_test.csv'
-IMAGE_PATH = '/shared_datasets/CACD/centercropped/jpg'
+TRAIN_CSV_PATH = './datasets/cacd_train.csv'
+VALID_CSV_PATH = './datasets/cacd_valid.csv'
+TEST_CSV_PATH = './datasets/cacd_test.csv'
+IMAGE_PATH = '/datasets/CACD2000'
 
 
 # Argparse helper
@@ -107,8 +107,7 @@ GRAYSCALE = False
 class CACDDataset(Dataset):
     """Custom Dataset for loading CACD face images"""
 
-    def __init__(self,
-                 csv_path, img_dir, transform=None):
+    def __init__(self, csv_path, img_dir, transform=None):
 
         df = pd.read_csv(csv_path, index_col=0)
         self.img_dir = img_dir
