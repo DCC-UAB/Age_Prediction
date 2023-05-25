@@ -9,16 +9,24 @@ from torch.utils.data import DataLoader
 
 
 ## DOC datasets.py
-class AFADDatasetAge(Dataset):
-    """Custom Dataset for loading AFAD face images"""
+class DatasetAge(Dataset):
+    """Custom Dataset for loading face images"""
 
-    def __init__(self, csv_path, img_dir, transform=None):
+    def __init__(self, csv_path, img_dir, loss, num_classes, dataset, transform=None):
         df = pd.read_csv(csv_path, index_col=0)
         self.img_dir = img_dir
+        self.dataset = dataset
         self.csv_path = csv_path
-        self.img_paths = df['path']
+        if(self.dataset == 'AFAD'):
+            self.img_paths = df['path']
+        elif(self.dataset == 'CACD'):
+            self.img_paths = df['file'].values
+        else:
+            raise ValueError("ERROR nom model")
         self.y = df['age'].values
         self.transform = transform
+        self.loss = loss
+        self.NUM_CLASSES = num_classes
 
     def __getitem__(self, index):
         img = Image.open(os.path.join(self.img_dir,
@@ -29,6 +37,11 @@ class AFADDatasetAge(Dataset):
 
         label = self.y[index]
 
+        if(self.loss != 'ce'):
+            levels = [1] * label + [0] * (self.NUM_CLASSES - 1 - label)
+            levels = torch.tensor(levels, dtype=torch.float32)
+            return img, label, levels
+
         return img, label
 
     def __len__(self):
@@ -38,14 +51,19 @@ class AFADDatasetAge(Dataset):
 def return_paths(df):
     ll_df = []
     if (df == 'CACD'):
+        ll_df.append('./coral-cnn-master/datasets/cacd_train.csv')  # path train
+        ll_df.append('./coral-cnn-master/datasets/cacd_valid.csv')  # validation train
+        ll_df.append('./coral-cnn-master/datasets/cacd_test.csv')  # test train
+        ll_df.append('./coral-cnn-master/datasets/CACD2000')  # path train
+        return ll_df
+    elif(df=='AFAD'):
         ll_df.append('./coral-cnn-master/datasets/afad_train.csv')  # path train
         ll_df.append('./coral-cnn-master/datasets/afad_valid.csv')  # validation train
         ll_df.append('./coral-cnn-master/datasets/afad_test.csv')  # test train
-        ll_df.append('./coral-cnn-master/datasets/tarball-master/AFAD-Full')  # path traind
+        ll_df.append('./coral-cnn-master/datasets/tarball-master/AFAD-Full')  # path train
         return ll_df
     else:
-        print('ERROR AL INDICAR ELS DATASETS')
-        exit(-1)
+        raise ValueError("ERROR AL INDICAR ELS DATASETS")
 
 
 def task_importance_weights(label_array, imp_weight, num_classes):
@@ -67,25 +85,29 @@ def task_importance_weights(label_array, imp_weight, num_classes):
         raise ValueError('Incorrect importance weight parameter.')
 
 
-def df_loader(train_p, valid_p, test_p, image_p, batch_size, n_workers):
+def df_loader(train_p, valid_p, test_p, image_p, batch_size, n_workers, loss_dataset, num_classes, dataset):
+
     custom_transform = transforms.Compose([transforms.Resize((128, 128)),
                                            transforms.RandomCrop((120, 120)),
                                            transforms.ToTensor()])
 
-    train_dataset = AFADDatasetAge(csv_path=train_p,
+    train_dataset = DatasetAge(csv_path=train_p,
                                    img_dir=image_p,
+                                   loss=loss_dataset, num_classes=num_classes, dataset=dataset,
                                    transform=custom_transform)
 
     custom_transform2 = transforms.Compose([transforms.Resize((128, 128)),
                                             transforms.CenterCrop((120, 120)),
                                             transforms.ToTensor()])
 
-    test_dataset = AFADDatasetAge(csv_path=test_p,
+    test_dataset = DatasetAge(csv_path=test_p,
                                   img_dir=image_p,
+                                  loss=loss_dataset, num_classes=num_classes, dataset=dataset,
                                   transform=custom_transform2)
 
-    valid_dataset = AFADDatasetAge(csv_path=valid_p,
+    valid_dataset = DatasetAge(csv_path=valid_p,
                                    img_dir=image_p,
+                                   loss=loss_dataset, num_classes=num_classes, dataset=dataset,
                                    transform=custom_transform2)
 
     train_loader = DataLoader(dataset=train_dataset,

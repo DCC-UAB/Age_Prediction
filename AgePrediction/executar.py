@@ -92,7 +92,13 @@ learning_rate = 0.0005
 num_epochs = 1 #200
 
 # Architecture
-NUM_CLASSES = 26
+if(DATASET == 'CACD'):
+    NUM_CLASSES = 49
+elif(DATASET == 'AFAD'):
+    NUM_CLASSES = 26
+else:
+    raise ValueError("ERROR: El dataset introduït no és correcte!")
+
 BATCH_SIZE = 256
 GRAYSCALE = False
 
@@ -103,7 +109,7 @@ if(LOSS!='ce'):
     ages = df['age'].values
     del df
     ages = torch.tensor(ages, dtype=torch.float)
-    imp = task_importance_weights(ages, IMP_WEIGHT)
+    imp = task_importance_weights(ages, IMP_WEIGHT, num_classes=NUM_CLASSES)
 else:
     imp = torch.zeros(NUM_CLASSES - 1, dtype=torch.float)
 imp = imp.to(DEVICE)
@@ -112,7 +118,8 @@ imp = imp.to(DEVICE)
 
 # TRANSFORMACIONS (igual per a totes)
 train_loader, valid_loader, test_loader, len_train_dataset = df_loader(TRAIN_CSV_PATH, VALID_CSV_PATH,
-                                                    TEST_CSV_PATH, IMAGE_PATH, BATCH_SIZE, NUM_WORKERS)
+                                                    TEST_CSV_PATH, IMAGE_PATH, BATCH_SIZE, NUM_WORKERS, LOSS,
+                                                                       NUM_CLASSES, DATASET)
 
 # cost_fn ho cridarem mes endavant des de dins!
 
@@ -131,12 +138,11 @@ best_mae, best_rmse, best_epoch = 999, 999, -1
 for epoch in range(num_epochs):
     model.train()
 
-    # si ho ajuntem en fem 2 i sumem!!! (debug a coral!)
     for batch_idx, tupla in enumerate(train_loader):
         if(LOSS=='ce'):
             features = tupla[0]
             targets = tupla[1]
-            levels = list()
+            levels = None
         else:
             features = tupla[0]
             targets = tupla[1]
