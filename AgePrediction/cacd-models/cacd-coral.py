@@ -106,23 +106,23 @@ BATCH_SIZE = 256
 GRAYSCALE = False
 
 df = pd.read_csv(TRAIN_CSV_PATH, index_col=0)
-ages = df['age'].values
+ages = df['age'].values #Labels
 del df
 ages = torch.tensor(ages, dtype=torch.float)
 
-
+#torch[3,3,3,4,4,5,6,6]
 def task_importance_weights(label_array):
-    uniq = torch.unique(label_array)
-    num_examples = label_array.size(0)
+    uniq = torch.unique(label_array) #torch[3,4,5,6]
+    num_examples = label_array.size(0) #8
 
-    m = torch.zeros(uniq.shape[0])
+    m = torch.zeros(uniq.shape[0]) #torch[0,0,0,0]
 
-    for i, t in enumerate(torch.arange(torch.min(uniq), torch.max(uniq))):
-        m_k = torch.max(torch.tensor([label_array[label_array > t].size(0),
-                                      num_examples - label_array[label_array > t].size(0)]))
-        m[i] = torch.sqrt(m_k.float())
-
-    imp = m / torch.max(m)
+    for i, t in enumerate(torch.arange(torch.min(uniq), torch.max(uniq))): #torch[3,4,5,6]
+        m_k = torch.max(torch.tensor([label_array[label_array > t].size(0), #3
+                                      num_examples - label_array[label_array > t].size(0)])) #5
+        # 5
+        m[i] = torch.sqrt(m_k.float())#m[2.23, 2,23, 2.45, 2.83]
+    imp = m / torch.max(m) #[0.78, 0.78, 0.86, 1]
     return imp
 
 

@@ -88,7 +88,7 @@ with open(LOGFILE, 'w') as f:
 ##########################
 
 # Hyperparameters
-learning_rate = 0.0005
+learning_rate = 0.01 #0.0005
 num_epochs = 1 #200
 
 # Architecture
