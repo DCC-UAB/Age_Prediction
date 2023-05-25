@@ -14,7 +14,7 @@ print(f'OpenCV: {cv2.__version__}')
 # OpenCV: 4.5.2
 
 
-root_path = './'
+root_path = './coral-cnn-master/datasets'
 
 orig_path = os.path.join(root_path, 'CACD2000')
 out_path = os.path.join(root_path, 'CACD2000-centered')
