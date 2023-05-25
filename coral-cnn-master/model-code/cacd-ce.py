@@ -62,12 +62,11 @@ if args.seed == -1:
 else:
     RANDOM_SEED = args.seed
 
-#PATH = args.outpath
-#if not os.path.exists(PATH):
-#    os.mkdir(PATH)
-#LOGFILE = os.path.join(PATH, 'training.log')
-LOGFILE = 'C:/Users/Marina/Desktop/3r curs/2n sem/Xarxes Neuronals i Aprenentatge Profund/Projecte/prova2/xnap-project-matcad_grup_3/coral-cnn-master/training.log'
-#TEST_PREDICTIONS = os.path.join(PATH, 'test_predictions.log')
+PATH = args.outpath
+if not os.path.exists(PATH):
+    os.mkdir(PATH)
+LOGFILE = os.path.join(PATH, 'training.log')
+TEST_PREDICTIONS = os.path.join(PATH, 'test_predictions.log')
 
 # Logging
 

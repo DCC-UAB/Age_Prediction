@@ -241,7 +241,16 @@ with torch.set_grad_enabled(False):
 all_pred = []
 all_probas = []
 with torch.set_grad_enabled(False):
-    for batch_idx, (features, targets, levels) in enumerate(test_loader):
+    for batch_idx, tupla in enumerate(test_loader):
+        if (LOSS == 'ce'):
+            features = tupla[0]
+            targets = tupla[1]
+            levels = None
+        else:
+            features = tupla[0]
+            targets = tupla[1]
+            levels = tupla[2]
+
         features = features.to(DEVICE)
         logits, probas = model(features)
         all_probas.append(probas)
