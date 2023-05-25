@@ -17,9 +17,9 @@ class DatasetAge(Dataset):
         self.img_dir = img_dir
         self.dataset = dataset
         self.csv_path = csv_path
-        if(self.dataset == 'AFAD'):
+        if self.dataset == 'AFAD':
             self.img_paths = df['path']
-        elif(self.dataset == 'CACD'):
+        elif self.dataset == 'CACD':
             self.img_paths = df['file'].values
         else:
             raise ValueError("ERROR nom model")
@@ -37,7 +37,7 @@ class DatasetAge(Dataset):
 
         label = self.y[index]
 
-        if(self.loss != 'ce'):
+        if (self.loss != 'ce'):
             levels = [1] * label + [0] * (self.NUM_CLASSES - 1 - label)
             levels = torch.tensor(levels, dtype=torch.float32)
             return img, label, levels
@@ -50,13 +50,13 @@ class DatasetAge(Dataset):
 
 def return_paths(df):
     ll_df = []
-    if (df == 'CACD'):
+    if df == 'CACD':
         ll_df.append('./coral-cnn-master/datasets/cacd_train.csv')  # path train
         ll_df.append('./coral-cnn-master/datasets/cacd_valid.csv')  # validation train
         ll_df.append('./coral-cnn-master/datasets/cacd_test.csv')  # test train
         ll_df.append('./coral-cnn-master/datasets/CACD2000')  # path train
         return ll_df
-    elif(df=='AFAD'):
+    elif df == 'AFAD':
         ll_df.append('./coral-cnn-master/datasets/afad_train.csv')  # path train
         ll_df.append('./coral-cnn-master/datasets/afad_valid.csv')  # validation train
         ll_df.append('./coral-cnn-master/datasets/afad_test.csv')  # test train
@@ -86,29 +86,28 @@ def task_importance_weights(label_array, imp_weight, num_classes):
 
 
 def df_loader(train_p, valid_p, test_p, image_p, batch_size, n_workers, loss_dataset, num_classes, dataset):
-
     custom_transform = transforms.Compose([transforms.Resize((128, 128)),
                                            transforms.RandomCrop((120, 120)),
                                            transforms.ToTensor()])
 
     train_dataset = DatasetAge(csv_path=train_p,
-                                   img_dir=image_p,
-                                   loss=loss_dataset, num_classes=num_classes, dataset=dataset,
-                                   transform=custom_transform)
+                               img_dir=image_p,
+                               loss=loss_dataset, num_classes=num_classes, dataset=dataset,
+                               transform=custom_transform)
 
     custom_transform2 = transforms.Compose([transforms.Resize((128, 128)),
                                             transforms.CenterCrop((120, 120)),
                                             transforms.ToTensor()])
 
     test_dataset = DatasetAge(csv_path=test_p,
-                                  img_dir=image_p,
-                                  loss=loss_dataset, num_classes=num_classes, dataset=dataset,
-                                  transform=custom_transform2)
+                              img_dir=image_p,
+                              loss=loss_dataset, num_classes=num_classes, dataset=dataset,
+                              transform=custom_transform2)
 
     valid_dataset = DatasetAge(csv_path=valid_p,
-                                   img_dir=image_p,
-                                   loss=loss_dataset, num_classes=num_classes, dataset=dataset,
-                                   transform=custom_transform2)
+                               img_dir=image_p,
+                               loss=loss_dataset, num_classes=num_classes, dataset=dataset,
+                               transform=custom_transform2)
 
     train_loader = DataLoader(dataset=train_dataset,
                               batch_size=batch_size,

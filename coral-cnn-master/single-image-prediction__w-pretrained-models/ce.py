@@ -51,7 +51,6 @@ else:
     raise ValueError("args.dataset must be 'afad',"
                      " 'morph2', or 'cacd'. Got %s " % (args.dataset))
 
-
 ############################
 ### Load image
 ############################
@@ -133,7 +132,7 @@ class ResNet(nn.Module):
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
-                m.weight.data.normal_(0, (2. / n)**.5)
+                m.weight.data.normal_(0, (2. / n) ** .5)
             elif isinstance(m, nn.BatchNorm2d):
                 m.weight.data.fill_(1)
                 m.bias.data.zero_()
@@ -175,7 +174,7 @@ class ResNet(nn.Module):
 
 def resnet34(num_classes, grayscale):
     """Constructs a ResNet-34 model."""
-    model = ResNet(block=BasicBlock, 
+    model = ResNet(block=BasicBlock,
                    layers=[3, 4, 6, 3],
                    num_classes=num_classes,
                    grayscale=grayscale)

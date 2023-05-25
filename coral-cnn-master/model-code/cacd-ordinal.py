@@ -23,11 +23,10 @@ from PIL import Image
 
 torch.backends.cudnn.deterministic = True
 
-TRAIN_CSV_PATH = './cacd_train.csv'
-VALID_CSV_PATH = './cacd_valid.csv'
-TEST_CSV_PATH = './cacd_test.csv'
-IMAGE_PATH = '/shared_datasets/CACD/centercropped/jpg'
-
+TRAIN_CSV_PATH = './datasets/cacd_train.csv'
+VALID_CSV_PATH = './datasets/cacd_valid.csv'
+TEST_CSV_PATH = './datasets/cacd_test.csv'
+IMAGE_PATH = './datasets/CACD2000'
 
 # Argparse helper
 
