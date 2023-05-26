@@ -1,0 +1,65 @@
+PyTorch Version: 2.0.0+cu117
+CUDA device available: True
+Using CUDA device: cuda:0
+Random Seed: 1
+Task Importance Weight: 0
+Output Path: ./AgePrediction/sortides/cacd
+Script: /home/xnmaster/projecte/AgePrediction/cacd-models/cacd-coral.py
+Epoch: 001/005 | Batch 0000/0448 | Cost: 35.4452
+Epoch: 001/005 | Batch 0050/0448 | Cost: 19.8769
+Epoch: 001/005 | Batch 0100/0448 | Cost: 21.4880
+Epoch: 001/005 | Batch 0150/0448 | Cost: 20.3680
+Epoch: 001/005 | Batch 0200/0448 | Cost: 19.3637
+Epoch: 001/005 | Batch 0250/0448 | Cost: 20.3172
+Epoch: 001/005 | Batch 0300/0448 | Cost: 20.7107
+Epoch: 001/005 | Batch 0350/0448 | Cost: 20.0971
+Epoch: 001/005 | Batch 0400/0448 | Cost: 18.7496
+MAE/RMSE: | Current Valid: 9.51/11.30 Ep. 0 | Best Valid : 9.51/11.30 Ep. 0
+Time elapsed: 7.51 min
+Epoch: 002/005 | Batch 0000/0448 | Cost: 19.5901
+Epoch: 002/005 | Batch 0050/0448 | Cost: 20.6145
+Epoch: 002/005 | Batch 0100/0448 | Cost: 19.6900
+Epoch: 002/005 | Batch 0150/0448 | Cost: 19.2107
+Epoch: 002/005 | Batch 0200/0448 | Cost: 19.2312
+Epoch: 002/005 | Batch 0250/0448 | Cost: 20.7229
+Epoch: 002/005 | Batch 0300/0448 | Cost: 19.0786
+Epoch: 002/005 | Batch 0350/0448 | Cost: 18.6893
+Epoch: 002/005 | Batch 0400/0448 | Cost: 19.6500
+MAE/RMSE: | Current Valid: 9.19/11.15 Ep. 1 | Best Valid : 9.19/11.15 Ep. 1
+Time elapsed: 15.04 min
+Epoch: 003/005 | Batch 0000/0448 | Cost: 19.5311
+Epoch: 003/005 | Batch 0050/0448 | Cost: 20.5806
+Epoch: 003/005 | Batch 0100/0448 | Cost: 19.5589
+Epoch: 003/005 | Batch 0150/0448 | Cost: 19.7230
+Epoch: 003/005 | Batch 0200/0448 | Cost: 17.9581
+Epoch: 003/005 | Batch 0250/0448 | Cost: 18.5971
+Epoch: 003/005 | Batch 0300/0448 | Cost: 18.4606
+Epoch: 003/005 | Batch 0350/0448 | Cost: 18.3018
+Epoch: 003/005 | Batch 0400/0448 | Cost: 17.5140
+MAE/RMSE: | Current Valid: 10.15/12.63 Ep. 2 | Best Valid : 9.19/11.15 Ep. 1
+Time elapsed: 22.59 min
+Epoch: 004/005 | Batch 0000/0448 | Cost: 18.5677
+Epoch: 004/005 | Batch 0050/0448 | Cost: 18.3629
+Epoch: 004/005 | Batch 0100/0448 | Cost: 18.0161
+Epoch: 004/005 | Batch 0150/0448 | Cost: 18.4689
+Epoch: 004/005 | Batch 0200/0448 | Cost: 17.4601
+Epoch: 004/005 | Batch 0250/0448 | Cost: 18.0154
+Epoch: 004/005 | Batch 0300/0448 | Cost: 17.1310
+Epoch: 004/005 | Batch 0350/0448 | Cost: 17.2875
+Epoch: 004/005 | Batch 0400/0448 | Cost: 16.3131
+MAE/RMSE: | Current Valid: 10.14/12.50 Ep. 3 | Best Valid : 9.19/11.15 Ep. 1
+Time elapsed: 30.16 min
+Epoch: 005/005 | Batch 0000/0448 | Cost: 17.8771
+Epoch: 005/005 | Batch 0050/0448 | Cost: 16.7633
+Epoch: 005/005 | Batch 0100/0448 | Cost: 16.5168
+Epoch: 005/005 | Batch 0150/0448 | Cost: 17.8510
+Epoch: 005/005 | Batch 0200/0448 | Cost: 17.0031
+Epoch: 005/005 | Batch 0250/0448 | Cost: 17.8624
+Epoch: 005/005 | Batch 0300/0448 | Cost: 16.7830
+Epoch: 005/005 | Batch 0350/0448 | Cost: 16.8463
+Epoch: 005/005 | Batch 0400/0448 | Cost: 16.4230
+MAE/RMSE: | Current Valid: 10.07/12.25 Ep. 4 | Best Valid : 9.19/11.15 Ep. 1
+Time elapsed: 37.72 min
+MAE/RMSE: | Train: 10.16/12.35 | Valid: 10.07/12.25 | Test: 10.17/12.33
+Total Training Time: 42.78 min
+MAE/RMSE: | Best Train: 9.36/11.36 | Best Valid: 9.19/11.15 | Best Test: 9.18/11.14
