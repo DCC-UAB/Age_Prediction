@@ -27,6 +27,8 @@ TRAIN_CSV_PATH = './coral-cnn-master/datasets/cacd_train.csv'
 VALID_CSV_PATH = './coral-cnn-master/datasets/cacd_valid.csv'
 TEST_CSV_PATH = './coral-cnn-master/datasets/cacd_test.csv'
 IMAGE_PATH = './coral-cnn-master/datasets/CACD2000'
+STATE_DICT_PATH = './AgePrediction/sortides/cacd/best_model.pt'
+# STATE_DICT_PATH = './AgePrediction/sortides/cacd-pretrained/cacd-coral__seed2/best_model.pt'
 
 # Argparse helper
 
@@ -97,8 +99,8 @@ with open(LOGFILE, 'w') as f:
 ##########################
 
 # Hyperparameters
-learning_rate = 0.0005
-num_epochs = 1  # 200
+learning_rate = 0.05 #0.0005
+num_epochs = 5  # 200
 
 # Architecture
 NUM_CLASSES = 49
@@ -339,7 +341,8 @@ def cost_fn(logits, levels, imp):
 torch.manual_seed(RANDOM_SEED)
 torch.cuda.manual_seed(RANDOM_SEED)
 model = resnet34(NUM_CLASSES, GRAYSCALE)
-
+model.load_state_dict(torch.load(STATE_DICT_PATH, map_location=DEVICE))
+# model.eval()
 model.to(DEVICE)
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
