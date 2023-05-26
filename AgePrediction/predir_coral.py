@@ -122,7 +122,7 @@ with torch.set_grad_enabled(False):
         all_pred.extend(lst)
 
 torch.save(torch.cat(all_probas).to(torch.device('cpu')), TEST_ALLPROBAS)
-all_pred2 = all_pred
+all_pred2 = all_pred.copy()
 with open(TEST_PREDICTIONS, 'w') as f:
     all_pred = ','.join(all_pred)
     f.write(all_pred)
