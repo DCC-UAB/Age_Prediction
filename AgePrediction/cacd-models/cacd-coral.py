@@ -26,9 +26,9 @@ torch.backends.cudnn.deterministic = True
 TRAIN_CSV_PATH = './coral-cnn-master/datasets/cacd_train.csv'
 VALID_CSV_PATH = './coral-cnn-master/datasets/cacd_valid.csv'
 TEST_CSV_PATH = './coral-cnn-master/datasets/cacd_test.csv'
-IMAGE_PATH = './coral-cnn-master/datasets/CACD2000'
-STATE_DICT_PATH = './AgePrediction/sortides/cacd/best_model.pt'
-# STATE_DICT_PATH = './AgePrediction/sortides/cacd-pretrained/cacd-coral__seed2/best_model.pt'
+IMAGE_PATH = './coral-cnn-master/datasets/CACD2000-centered'
+# STATE_DICT_PATH = './AgePrediction/sortides/cacd/best_model.pt'
+STATE_DICT_PATH = './AgePrediction/sortides/cacd-pretrained/cacd-coral__seed1/best_model.pt'
 
 # Argparse helper
 
@@ -460,6 +460,7 @@ with torch.set_grad_enabled(False):
     with open(LOGFILE, 'a') as f:
         f.write('%s\n' % s)
 
+'''
 ########## SAVE PREDICTIONS ######
 all_pred = []
 all_probas = []
@@ -477,3 +478,47 @@ torch.save(torch.cat(all_probas).to(torch.device('cpu')), TEST_ALLPROBAS)
 with open(TEST_PREDICTIONS, 'w') as f:
     all_pred = ','.join(all_pred)
     f.write(all_pred)
+'''
+
+########## SAVE PREDICTIONS ######
+all_pred_str = []
+all_pred_int = []
+all_probas = []
+
+with torch.set_grad_enabled(False):
+    for batch_idx, (features, targets, levels) in enumerate(test_loader):
+        lst_str = []
+        lst_int = []
+        #features = features.to(DEVICE)
+        logits, probas = model(features)
+        all_probas.append(probas)
+        predict_levels = probas > 0.5
+        predicted_labels = torch.sum(predict_levels, dim=1)
+        for i in (predicted_labels):
+            lst_str.append(str(int(i)))
+            lst_int.append(int(i))
+        all_pred_str.extend(lst_str)
+        all_pred_int.extend(lst_int)
+
+all_pred_int = torch.tensor(all_pred_int, dtype=torch.int)
+dif = ages - all_pred_int
+
+for i in range(len(dif)):
+    print("Pred:", int(all_pred_int[i]), "Age:", int(ages[i]), "Dif:", int(dif[i]))
+
+print("\nmitjana dif:")
+print(torch.mean(dif.float()))
+print("\nmitjana abs(dif):")
+print(torch.mean(torch.abs(dif.float())))
+print("\nstd:")
+print(torch.std(dif.float()))
+print("\nmin:")
+print(torch.min(dif.float()))
+print("\nmax:")
+print(torch.max(dif.float()))
+
+
+torch.save(torch.cat(all_probas).to(torch.device('cpu')), TEST_ALLPROBAS)
+with open(TEST_PREDICTIONS, 'w') as f:
+    all_pred_str = ','.join(all_pred_str)
+    f.write(all_pred_str)

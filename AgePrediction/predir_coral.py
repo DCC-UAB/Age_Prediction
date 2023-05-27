@@ -26,7 +26,7 @@ from AgePrediction.models.models import ResNetCoral, BasicBlock
 torch.backends.cudnn.deterministic = True
 
 CLASSE_CSV_PATH = './coral-cnn-master/datasets/cacd_test.csv'
-IMAGE_PATH = './coral-cnn-master/datasets/CACD2000'
+IMAGE_PATH = './coral-cnn-master/datasets/CACD2000-centered'
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--cuda',
@@ -134,14 +134,17 @@ dif = ages - all_pred_int
 for i in range(len(dif)):
     print("Pred:", int(all_pred_int[i]), "Age:", int(ages[i]), "Dif:", int(dif[i]))
 
-print("\nmitjana:")
+print("\nmitjana dif:")
 print(torch.mean(dif.float()))
+print("\nmitjana abs(dif):")
+print(torch.mean(torch.abs(dif.float())))
 print("\nstd:")
 print(torch.std(dif.float()))
 print("\nmin:")
 print(torch.min(dif.float()))
 print("\nmax:")
 print(torch.max(dif.float()))
+
 
 torch.save(torch.cat(all_probas).to(torch.device('cpu')), TEST_ALLPROBAS)
 with open(TEST_PREDICTIONS, 'w') as f:
