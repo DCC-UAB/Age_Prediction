@@ -101,7 +101,7 @@ with open(LOGFILE, 'w') as f:
 
 # Hyperparameters
 learning_rate = 0.0005
-num_epochs = 1 #200
+num_epochs = 200 #200
 
 # Architecture
 NUM_CLASSES = 49
