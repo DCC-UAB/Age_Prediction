@@ -99,7 +99,7 @@ with open(LOGFILE, 'w') as f:
 ##########################
 
 # Hyperparameters
-learning_rate = 0.05 #0.0005
+learning_rate = 0.0005 #0.0005
 num_epochs = 1  # 200
 
 # Architecture
@@ -489,7 +489,7 @@ with torch.set_grad_enabled(False):
     for batch_idx, (features, targets, levels) in enumerate(test_loader):
         lst_str = []
         lst_int = []
-        #features = features.to(DEVICE)
+        features = features.to(DEVICE)
         logits, probas = model(features)
         all_probas.append(probas)
         predict_levels = probas > 0.5
@@ -501,6 +501,10 @@ with torch.set_grad_enabled(False):
         all_pred_int.extend(lst_int)
 
 all_pred_int = torch.tensor(all_pred_int, dtype=torch.int)
+df = pd.read_csv(TEST_CSV_PATH, index_col=0)
+ages = df['age'].values #Labels
+del df
+ages = torch.tensor(ages, dtype=torch.float)
 dif = ages - all_pred_int
 
 for i in range(len(dif)):

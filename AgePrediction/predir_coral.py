@@ -117,7 +117,7 @@ with torch.set_grad_enabled(False):
     for batch_idx, (features, targets, levels) in enumerate(test_loader):
         lst_str = []
         lst_int = []
-        #features = features.to(DEVICE)
+        # features = features.to(DEVICE)
         logits, probas = model(features)
         all_probas.append(probas)
         predict_levels = probas > 0.5
