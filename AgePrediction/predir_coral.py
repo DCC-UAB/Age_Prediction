@@ -109,35 +109,45 @@ model.load_state_dict(torch.load(STATE_DICT_PATH, map_location=DEVICE))
 model.eval()
 
 ########## SAVE PREDICTIONS ######
-all_pred = []
+all_pred_str = []
+all_pred_int = []
 all_probas = []
+
 with torch.set_grad_enabled(False):
     for batch_idx, (features, targets, levels) in enumerate(test_loader):
+        lst_str = []
+        lst_int = []
         #features = features.to(DEVICE)
         logits, probas = model(features)
         all_probas.append(probas)
         predict_levels = probas > 0.5
         predicted_labels = torch.sum(predict_levels, dim=1)
-        lst = [str(int(i)) for i in predicted_labels]
-        all_pred.extend(lst)
+        for i in (predicted_labels):
+            lst_str.append(str(int(i)))
+            lst_int.append(int(i))
+        all_pred_str.extend(lst_str)
+        all_pred_int.extend(lst_int)
+
+all_pred_int = torch.tensor(all_pred_int, dtype=torch.int)
+dif = ages - all_pred_int
+
+for i in range(len(dif)):
+    print("Pred:", int(all_pred_int[i]), "Age:", int(ages[i]), "Dif:", int(dif[i]))
+
+print("\nmitjana:")
+print(torch.mean(dif.float()))
+print("\nstd:")
+print(torch.std(dif.float()))
+print("\nmin:")
+print(torch.min(dif.float()))
+print("\nmax:")
+print(torch.max(dif.float()))
 
 torch.save(torch.cat(all_probas).to(torch.device('cpu')), TEST_ALLPROBAS)
-all_pred2 = all_pred.copy()
 with open(TEST_PREDICTIONS, 'w') as f:
-    all_pred = ','.join(all_pred)
-    f.write(all_pred)
+    all_pred_str = ','.join(all_pred_str)
+    f.write(all_pred_str)
 
-all_pred2 = torch.tensor(all_pred2, dtype=torch.float)
 
-dif = ages - all_pred2
-print(dif)
-print("mitjana")
-print(torch.mean(dif.float()))
-print("std")
-print(torch.std(dif.float()))
-print("min")
-print(torch.min(dif.float()))
-print("max")
-print(torch.max(dif.float()))
 
 
