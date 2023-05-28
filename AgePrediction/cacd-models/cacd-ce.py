@@ -1,7 +1,7 @@
 # coding: utf-8
 
 #############################################
-# Consistent Cumulative Logits with ResNet-34
+# Cross Entropy with ResNet-34
 #############################################
 
 # Imports
@@ -23,12 +23,11 @@ from PIL import Image
 
 torch.backends.cudnn.deterministic = True
 
-TRAIN_CSV_PATH = './coral-cnn-master/datasets/cacd_train.csv'
-VALID_CSV_PATH = './coral-cnn-master/datasets/cacd_valid.csv'
-TEST_CSV_PATH = './coral-cnn-master/datasets/cacd_test.csv'
-IMAGE_PATH = './coral-cnn-master/datasets/CACD2000-centered'
-# STATE_DICT_PATH = './AgePrediction/sortides/cacd/best_model.pt'
-STATE_DICT_PATH = './AgePrediction/sortides/cacd-pretrained/cacd-coral__seed1/best_model.pt'
+TRAIN_CSV_PATH = './datasets/cacd_train.csv'
+VALID_CSV_PATH = './datasets/cacd_valid.csv'
+TEST_CSV_PATH = './datasets/cacd_test.csv'
+IMAGE_PATH = './datasets/CACD2000'
+
 
 # Argparse helper
 
@@ -47,13 +46,10 @@ parser.add_argument('--numworkers',
 
 parser.add_argument('--outpath',
                     type=str,
-                    required=True)
-
-parser.add_argument('--imp_weight',
-                    type=int,
-                    default=0)
+                    required=False) #TRUEEEEE
 
 args = parser.parse_args()
+
 NUM_WORKERS = args.numworkers
 
 if args.cuda >= 0:
@@ -66,15 +62,11 @@ if args.seed == -1:
 else:
     RANDOM_SEED = args.seed
 
-IMP_WEIGHT = args.imp_weight
-
 PATH = args.outpath
 if not os.path.exists(PATH):
     os.mkdir(PATH)
-
 LOGFILE = os.path.join(PATH, 'training.log')
 TEST_PREDICTIONS = os.path.join(PATH, 'test_predictions.log')
-TEST_ALLPROBAS = os.path.join(PATH, 'test_allprobas.tensor')
 
 # Logging
 
@@ -84,8 +76,8 @@ header.append('PyTorch Version: %s' % torch.__version__)
 header.append('CUDA device available: %s' % torch.cuda.is_available())
 header.append('Using CUDA device: %s' % DEVICE)
 header.append('Random Seed: %s' % RANDOM_SEED)
-header.append('Task Importance Weight: %s' % IMP_WEIGHT)
-header.append('Output Path: %s' % PATH)
+#header.append('Output Path: %s' % PATH)
+header.append('Output LOGFILE: %s' % LOGFILE)
 header.append('Script: %s' % sys.argv[0])
 
 with open(LOGFILE, 'w') as f:
@@ -99,55 +91,24 @@ with open(LOGFILE, 'w') as f:
 ##########################
 
 # Hyperparameters
-learning_rate = 0.0005 #0.0005
-num_epochs = 5  # 200
+learning_rate = 0.0005
+num_epochs = 0  # 200
 
 # Architecture
 NUM_CLASSES = 49
-BATCH_SIZE = 256
+BATCH_SIZE = 512  # 256
 GRAYSCALE = False
-
-df = pd.read_csv(TRAIN_CSV_PATH, index_col=0)
-ages = df['age'].values #Labels
-del df
-ages = torch.tensor(ages, dtype=torch.float)
-
-#torch[3,3,3,4,4,5,6,6]
-def task_importance_weights(label_array):
-    uniq = torch.unique(label_array) #torch[3,4,5,6]
-    num_examples = label_array.size(0) #8
-
-    m = torch.zeros(uniq.shape[0]) #torch[0,0,0,0]
-
-    for i, t in enumerate(torch.arange(torch.min(uniq), torch.max(uniq))): #torch[3,4,5,6]
-        m_k = torch.max(torch.tensor([label_array[label_array > t].size(0), #3
-                                      num_examples - label_array[label_array > t].size(0)])) #5
-        # 5
-        m[i] = torch.sqrt(m_k.float())#m[2.23, 2,23, 2.45, 2.83]
-    imp = m / torch.max(m) #[0.78, 0.78, 0.86, 1]
-    return imp
-
-
-# Data-specific scheme
-if not IMP_WEIGHT:
-    imp = torch.ones(NUM_CLASSES - 1, dtype=torch.float)
-elif IMP_WEIGHT == 1:
-    imp = task_importance_weights(ages)
-    imp = imp[0:NUM_CLASSES - 1]
-else:
-    raise ValueError('Incorrect importance weight parameter.')
-imp = imp.to(DEVICE)
 
 
 ###################
 # Dataset
 ###################
 
+
 class CACDDataset(Dataset):
     """Custom Dataset for loading CACD face images"""
 
-    def __init__(self,
-                 csv_path, img_dir, transform=None):
+    def __init__(self, csv_path, img_dir, transform=None):
         df = pd.read_csv(csv_path, index_col=0)
         self.img_dir = img_dir
         self.csv_path = csv_path
@@ -163,10 +124,8 @@ class CACDDataset(Dataset):
             img = self.transform(img)
 
         label = self.y[index]
-        levels = [1] * label + [0] * (NUM_CLASSES - 1 - label)
-        levels = torch.tensor(levels, dtype=torch.float32)
 
-        return img, label, levels
+        return img, label
 
     def __len__(self):
         return self.y.shape[0]
@@ -201,7 +160,6 @@ valid_loader = DataLoader(dataset=valid_dataset,
                           batch_size=BATCH_SIZE,
                           shuffle=False,
                           num_workers=NUM_WORKERS)
-
 test_loader = DataLoader(dataset=test_dataset,
                          batch_size=BATCH_SIZE,
                          shuffle=False,
@@ -254,7 +212,6 @@ class BasicBlock(nn.Module):
 class ResNet(nn.Module):
 
     def __init__(self, block, layers, num_classes, grayscale):
-        self.num_classes = num_classes
         self.inplanes = 64
         if grayscale:
             in_dim = 1
@@ -271,8 +228,7 @@ class ResNet(nn.Module):
         self.layer3 = self._make_layer(block, 256, layers[2], stride=2)
         self.layer4 = self._make_layer(block, 512, layers[3], stride=2)
         self.avgpool = nn.AvgPool2d(4)
-        self.fc = nn.Linear(512, 1, bias=False)
-        self.linear_1_bias = nn.Parameter(torch.zeros(self.num_classes - 1).float())
+        self.fc = nn.Linear(512, num_classes)
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -309,12 +265,11 @@ class ResNet(nn.Module):
         x = self.layer2(x)
         x = self.layer3(x)
         x = self.layer4(x)
-
         x = self.avgpool(x)
+
         x = x.view(x.size(0), -1)
         logits = self.fc(x)
-        logits = logits + self.linear_1_bias
-        probas = torch.sigmoid(logits)
+        probas = F.softmax(logits, dim=1)
         return logits, probas
 
 
@@ -331,31 +286,22 @@ def resnet34(num_classes, grayscale):
 # Initialize Cost, Model, and Optimizer
 ###########################################
 
-def cost_fn(logits, levels, imp):
-    val = (-torch.sum((F.logsigmoid(logits) * levels
-                       + (F.logsigmoid(logits) - logits) * (1 - levels)) * imp,
-                      dim=1))
-    return torch.mean(val)
-
-
 torch.manual_seed(RANDOM_SEED)
 torch.cuda.manual_seed(RANDOM_SEED)
 model = resnet34(NUM_CLASSES, GRAYSCALE)
-model.load_state_dict(torch.load(STATE_DICT_PATH, map_location=DEVICE))
-# model.eval()
+
 model.to(DEVICE)
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
 
 def compute_mae_and_mse(model, data_loader, device):
-    mae, mse, num_examples = 0, 0, 0
-    for i, (features, targets, levels) in enumerate(data_loader):
+    mae, mse, num_examples = 0., 0., 0
+    for i, (features, targets) in enumerate(data_loader):
         features = features.to(device)
         targets = targets.to(device)
 
         logits, probas = model(features)
-        predict_levels = probas > 0.5
-        predicted_labels = torch.sum(predict_levels, dim=1)
+        _, predicted_labels = torch.max(probas, 1)
         num_examples += targets.size(0)
         mae += torch.sum(torch.abs(predicted_labels - targets))
         mse += torch.sum((predicted_labels - targets) ** 2)
@@ -365,21 +311,18 @@ def compute_mae_and_mse(model, data_loader, device):
 
 
 start_time = time.time()
-
 best_mae, best_rmse, best_epoch = 999, 999, -1
 for epoch in range(num_epochs):
 
     model.train()
-    for batch_idx, (features, targets, levels) in enumerate(train_loader):
+    for batch_idx, (features, targets) in enumerate(train_loader):
 
         features = features.to(DEVICE)
-        targets = targets
         targets = targets.to(DEVICE)
-        levels = levels.to(DEVICE)
 
         # FORWARD AND BACK PROP
         logits, probas = model(features)
-        cost = cost_fn(logits, levels, imp)
+        cost = F.cross_entropy(logits, targets)
         optimizer.zero_grad()
 
         cost.backward()
@@ -460,69 +403,18 @@ with torch.set_grad_enabled(False):
     with open(LOGFILE, 'a') as f:
         f.write('%s\n' % s)
 
-'''
 ########## SAVE PREDICTIONS ######
 all_pred = []
-all_probas = []
 with torch.set_grad_enabled(False):
-    for batch_idx, (features, targets, levels) in enumerate(test_loader):
+    for batch_idx, (features, targets) in enumerate(test_loader):
         features = features.to(DEVICE)
         logits, probas = model(features)
-        all_probas.append(probas)
         predict_levels = probas > 0.5
         predicted_labels = torch.sum(predict_levels, dim=1)
         lst = [str(int(i)) for i in predicted_labels]
         all_pred.extend(lst)
 
-torch.save(torch.cat(all_probas).to(torch.device('cpu')), TEST_ALLPROBAS)
 with open(TEST_PREDICTIONS, 'w') as f:
     all_pred = ','.join(all_pred)
     f.write(all_pred)
-'''
 
-########## SAVE PREDICTIONS ######
-all_pred_str = []
-all_pred_int = []
-all_probas = []
-
-with torch.set_grad_enabled(False):
-    for batch_idx, (features, targets, levels) in enumerate(test_loader):
-        lst_str = []
-        lst_int = []
-        features = features.to(DEVICE)
-        logits, probas = model(features)
-        all_probas.append(probas)
-        predict_levels = probas > 0.5
-        predicted_labels = torch.sum(predict_levels, dim=1)
-        for i in (predicted_labels):
-            lst_str.append(str(int(i)))
-            lst_int.append(int(i))
-        all_pred_str.extend(lst_str)
-        all_pred_int.extend(lst_int)
-
-all_pred_int = torch.tensor(all_pred_int, dtype=torch.int)
-df = pd.read_csv(TEST_CSV_PATH, index_col=0)
-ages = df['age'].values #Labels
-del df
-ages = torch.tensor(ages, dtype=torch.float)
-dif = ages - all_pred_int
-
-for i in range(len(dif)):
-    print("Pred:", int(all_pred_int[i]), "Age:", int(ages[i]), "Dif:", int(dif[i]))
-
-print("\nmitjana dif:")
-print(torch.mean(dif.float()))
-print("\nmitjana abs(dif):")
-print(torch.mean(torch.abs(dif.float())))
-print("\nstd:")
-print(torch.std(dif.float()))
-print("\nmin:")
-print(torch.min(dif.float()))
-print("\nmax:")
-print(torch.max(dif.float()))
-
-
-torch.save(torch.cat(all_probas).to(torch.device('cpu')), TEST_ALLPROBAS)
-with open(TEST_PREDICTIONS, 'w') as f:
-    all_pred_str = ','.join(all_pred_str)
-    f.write(all_pred_str)

@@ -109,11 +109,16 @@ if(LOSS!='ce'):
     ages = df['age'].values
     del df
     ages = torch.tensor(ages, dtype=torch.float)
-    imp = task_importance_weights(ages, IMP_WEIGHT, num_classes=NUM_CLASSES)
+    if not IMP_WEIGHT:
+        imp = torch.ones(NUM_CLASSES - 1, dtype=torch.float)
+    elif IMP_WEIGHT == 1:
+        imp = task_importance_weights(ages)
+        imp = imp[0:NUM_CLASSES - 1]
+    else:
+        raise ValueError('Incorrect importance weight parameter.')
+    imp = imp.to(DEVICE)
 else:
-    imp = torch.zeros(NUM_CLASSES - 1, dtype=torch.float)
-imp = imp.to(DEVICE)
-
+    imp = None
 
 
 # TRANSFORMACIONS (igual per a totes)
@@ -126,8 +131,8 @@ train_loader, valid_loader, test_loader, len_train_dataset = df_loader(TRAIN_CSV
 # CREEM MODEL I OPTIMITZADOR
 torch.manual_seed(RANDOM_SEED)
 torch.cuda.manual_seed(RANDOM_SEED)
-model = resnet34(NUM_CLASSES, GRAYSCALE)
-
+model = resnet34(NUM_CLASSES, GRAYSCALE, LOSS)
+# model.load_state_dict(torch.load(STATE_DICT_PATH, map_location=DEVICE))
 model.to(DEVICE)
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 

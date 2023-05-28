@@ -66,7 +66,6 @@ class DatasetAge(Dataset):
             img = self.transform(img)
 
         label = self.y[index]
-
         if (self.loss != 'ce'):
             levels = [1] * label + [0] * (self.NUM_CLASSES - 1 - label)
             levels = torch.tensor(levels, dtype=torch.float32)
@@ -84,7 +83,7 @@ def return_paths(df):
         ll_df.append('./coral-cnn-master/datasets/cacd_train.csv')  # path train
         ll_df.append('./coral-cnn-master/datasets/cacd_valid.csv')  # validation train
         ll_df.append('./coral-cnn-master/datasets/cacd_test.csv')  # test train
-        ll_df.append('./coral-cnn-master/datasets/CACD2000')  # path train
+        ll_df.append('./coral-cnn-master/datasets/CACD2000-centered')  # path train
         return ll_df
     elif df == 'AFAD':
         ll_df.append('./coral-cnn-master/datasets/afad_train.csv')  # path train
