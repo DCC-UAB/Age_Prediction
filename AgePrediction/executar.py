@@ -5,7 +5,6 @@ import argparse
 from utils.utils import *
 from models.models import *
 
-
 parser = argparse.ArgumentParser()
 parser.add_argument('--cuda',
                     type=int,
@@ -35,6 +34,13 @@ parser.add_argument('--loss',
                     type=str,
                     default='ce')
 
+parser.add_argument('--starting_params',
+                    type=int,
+                    default=-1)
+
+parser.add_argument('--state_dict_path',
+                    type=str)
+
 args = parser.parse_args()
 
 NUM_WORKERS = args.numworkers
@@ -60,12 +66,14 @@ LOGFILE = os.path.join(PATH, 'training.log')
 TEST_PREDICTIONS = os.path.join(PATH, 'test_predictions.log')
 TEST_ALLPROBAS = os.path.join(PATH, 'test_allprobas.tensor')
 
-
 path_list = return_paths(DATASET)
 TRAIN_CSV_PATH = path_list[0]
 VALID_CSV_PATH = path_list[1]
 TEST_CSV_PATH = path_list[2]
 IMAGE_PATH = path_list[3]
+
+if args.starting_params >= 0:
+    STATE_DICT_PATH = args.state_dict_path
 
 
 header = []
@@ -82,19 +90,18 @@ with open(LOGFILE, 'w') as f:
         f.write('%s\n' % entry)
         f.flush()
 
-
 ##########################
 # SETTINGS
 ##########################
 
 # Hyperparameters
-learning_rate = 0.01 #0.0005
-num_epochs = 1 #200
+learning_rate = 0.01  # 0.0005
+num_epochs = 1  # 200
 
 # Architecture
-if(DATASET == 'CACD'):
+if (DATASET == 'CACD'):
     NUM_CLASSES = 49
-elif(DATASET == 'AFAD'):
+elif (DATASET == 'AFAD'):
     NUM_CLASSES = 26
 else:
     raise ValueError("ERROR: El dataset introduït no és correcte!")
@@ -102,9 +109,8 @@ else:
 BATCH_SIZE = 256
 GRAYSCALE = False
 
-
 # Nomes necessitem imp per a coral i ordinal
-if(LOSS!='ce'):
+if (LOSS != 'ce'):
     df = pd.read_csv(TRAIN_CSV_PATH, index_col=0)
     ages = df['age'].values
     del df
@@ -120,10 +126,10 @@ if(LOSS!='ce'):
 else:
     imp = None
 
-
 # TRANSFORMACIONS (igual per a totes)
 train_loader, valid_loader, test_loader, len_train_dataset = df_loader(TRAIN_CSV_PATH, VALID_CSV_PATH,
-                                                    TEST_CSV_PATH, IMAGE_PATH, BATCH_SIZE, NUM_WORKERS, LOSS,
+                                                                       TEST_CSV_PATH, IMAGE_PATH, BATCH_SIZE,
+                                                                       NUM_WORKERS, LOSS,
                                                                        NUM_CLASSES, DATASET)
 
 # cost_fn ho cridarem mes endavant des de dins!
@@ -132,10 +138,12 @@ train_loader, valid_loader, test_loader, len_train_dataset = df_loader(TRAIN_CSV
 torch.manual_seed(RANDOM_SEED)
 torch.cuda.manual_seed(RANDOM_SEED)
 model = resnet34(NUM_CLASSES, GRAYSCALE, LOSS)
-# model.load_state_dict(torch.load(STATE_DICT_PATH, map_location=DEVICE))
+
+if args.starting_params >= 0:
+    model.load_state_dict(torch.load(STATE_DICT_PATH, map_location=DEVICE))
+
 model.to(DEVICE)
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
-
 
 start_time = time.time()
 # COMENÇA LA PART DE CRIDA AL MODEL
@@ -144,7 +152,7 @@ for epoch in range(num_epochs):
     model.train()
 
     for batch_idx, tupla in enumerate(train_loader):
-        if(LOSS=='ce'):
+        if (LOSS == 'ce'):
             features = tupla[0]
             targets = tupla[1]
             levels = None
@@ -169,8 +177,8 @@ for epoch in range(num_epochs):
         # LOGGING
         if not batch_idx % 50:
             s = ('Epoch: %03d/%03d | Batch %04d/%04d | Cost: %.4f'
-                 % (epoch+1, num_epochs, batch_idx,
-                     len_train_dataset//BATCH_SIZE, cost))
+                 % (epoch + 1, num_epochs, batch_idx,
+                    len_train_dataset // BATCH_SIZE, cost))
             print(s)
             with open(LOGFILE, 'a') as f:
                 f.write('%s\n' % s)
@@ -196,7 +204,6 @@ for epoch in range(num_epochs):
     with open(LOGFILE, 'a') as f:
         f.write('%s\n' % s)
 
-
 model.eval()
 with torch.set_grad_enabled(False):  # save memory during inference
 
@@ -215,11 +222,10 @@ with torch.set_grad_enabled(False):  # save memory during inference
     with open(LOGFILE, 'a') as f:
         f.write('%s\n' % s)
 
-s = 'Total Training Time: %.2f min' % ((time.time() - start_time)/60)
+s = 'Total Training Time: %.2f min' % ((time.time() - start_time) / 60)
 print(s)
 with open(LOGFILE, 'a') as f:
     f.write('%s\n' % s)
-
 
 ########## EVALUATE BEST MODEL ######
 model.load_state_dict(torch.load(os.path.join(PATH, 'best_model.pt')))
@@ -241,12 +247,14 @@ with torch.set_grad_enabled(False):
     with open(LOGFILE, 'a') as f:
         f.write('%s\n' % s)
 
-
 ########## SAVE PREDICTIONS ######
-all_pred = []
+all_pred_str = []
+all_pred_int = []
 all_probas = []
 with torch.set_grad_enabled(False):
     for batch_idx, tupla in enumerate(test_loader):
+        lst_str = []
+        lst_int = []
         if (LOSS == 'ce'):
             features = tupla[0]
             targets = tupla[1]
@@ -261,19 +269,37 @@ with torch.set_grad_enabled(False):
         all_probas.append(probas)
         predict_levels = probas > 0.5
         predicted_labels = torch.sum(predict_levels, dim=1)
-        lst = [str(int(i)) for i in predicted_labels]
-        all_pred.extend(lst)
+        for i in (predicted_labels):
+            lst_str.append(str(int(i)))
+            lst_int.append(int(i))
+        all_pred_str.extend(lst_str)
+        all_pred_int.extend(lst_int)
 
-if(LOSS != 'ce'):
+all_pred_int = torch.tensor(all_pred_int, dtype=torch.int)
+df = pd.read_csv(TEST_CSV_PATH, index_col=0)
+ages = df['age'].values #Labels
+del df
+ages = torch.tensor(ages, dtype=torch.float)
+dif = ages - all_pred_int
+
+# for i in range(len(dif)):
+#     print("Pred:", int(all_pred_int[i]), "Age:", int(ages[i]), "Dif:", int(dif[i]))
+
+print("\nmitjana dif:")
+print(torch.mean(dif.float()))
+print("\nmitjana abs(dif):")
+print(torch.mean(torch.abs(dif.float())))
+print("\nstd:")
+print(torch.std(dif.float()))
+print("\nmin:")
+print(torch.min(dif.float()))
+print("\nmax:")
+print(torch.max(dif.float()))
+
+
+if (LOSS != 'ce'):
     torch.save(torch.cat(all_probas).to(torch.device('cpu')), TEST_ALLPROBAS)
 
 with open(TEST_PREDICTIONS, 'w') as f:
-    all_pred = ','.join(all_pred)
-    f.write(all_pred)
-
-
-
-
-
-
-
+    all_pred_str = ','.join(all_pred_str)
+    f.write(all_pred_str)
