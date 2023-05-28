@@ -104,6 +104,7 @@ class ResNetCe(nn.Module):
         probas = F.softmax(logits, dim=1)
         return logits, probas
 
+
 class ResNetOrdinal(nn.Module):
 
     def __init__(self, block, layers, num_classes, grayscale):
@@ -124,12 +125,12 @@ class ResNetOrdinal(nn.Module):
         self.layer3 = self._make_layer(block, 256, layers[2], stride=2)
         self.layer4 = self._make_layer(block, 512, layers[3], stride=2)
         self.avgpool = nn.AvgPool2d(4)
-        self.fc = nn.Linear(512, (self.num_classes-1)*2)
+        self.fc = nn.Linear(512, (self.num_classes - 1) * 2)
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
-                m.weight.data.normal_(0, (2. / n)**.5)
+                m.weight.data.normal_(0, (2. / n) ** .5)
             elif isinstance(m, nn.BatchNorm2d):
                 m.weight.data.fill_(1)
                 m.bias.data.zero_()
@@ -165,9 +166,10 @@ class ResNetOrdinal(nn.Module):
         x = self.avgpool(x)
         x = x.view(x.size(0), -1)
         logits = self.fc(x)
-        logits = logits.view(-1, (self.num_classes-1), 2)
+        logits = logits.view(-1, (self.num_classes - 1), 2)
         probas = F.softmax(logits, dim=2)[:, :, 1]
         return logits, probas
+
 
 class ResNetCoral(nn.Module):
     def __init__(self, block, layers, num_classes, grayscale):
@@ -234,26 +236,24 @@ class ResNetCoral(nn.Module):
         probas = torch.sigmoid(logits)
         return logits, probas
 
-def resnet34(num_classes, grayscale, loss = 'ce'):
+
+def resnet34(num_classes, grayscale, loss='ce'):
     """Constructs a ResNet-34 model."""
-    if (loss == 'ce'):
+    if loss == 'ce':
         model = ResNetCe(block=BasicBlock,
-                       layers=[3, 4, 6, 3],
-                       num_classes=num_classes,
-                       grayscale=grayscale)
-    elif (loss == 'coral'):
+                         layers=[3, 4, 6, 3],
+                         num_classes=num_classes,
+                         grayscale=grayscale)
+    elif loss == 'coral':
         model = ResNetCoral(block=BasicBlock,
-                       layers=[3, 4, 6, 3],
-                       num_classes=num_classes,
-                       grayscale=grayscale)
-    elif (loss == 'ordinal'):
+                            layers=[3, 4, 6, 3],
+                            num_classes=num_classes,
+                            grayscale=grayscale)
+    elif loss == 'ordinal':
         model = ResNetOrdinal(block=BasicBlock,
-                       layers=[3, 4, 6, 3],
-                       num_classes=num_classes,
-                       grayscale=grayscale)
+                              layers=[3, 4, 6, 3],
+                              num_classes=num_classes,
+                              grayscale=grayscale)
     else:
-        raise ValueError("Loss incorrecte!!")
+        raise ValueError("Incorrect loss introduced.")
     return model
-
-
-

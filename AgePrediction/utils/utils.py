@@ -8,37 +8,6 @@ from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 
 
-## DOC datasets.py
-
-class CACDDataset(Dataset):
-    """Custom Dataset for loading CACD face images"""
-    def __init__(self,
-                 csv_path, img_dir, transform=None):
-
-        df = pd.read_csv(csv_path, index_col=0)
-        self.img_dir = img_dir
-        self.csv_path = csv_path
-        self.img_names = df['file'].values
-        self.y = df['age'].values
-        self.transform = transform
-
-    def __getitem__(self, index):
-        NUM_CLASSES = 49
-        img = Image.open(os.path.join(self.img_dir,
-                                      self.img_names[index]))
-
-        if self.transform is not None:
-            img = self.transform(img)
-
-        label = self.y[index]
-        levels = [1]*label + [0]*(NUM_CLASSES - 1 - label)
-        levels = torch.tensor(levels, dtype=torch.float32)
-
-        return img, label, levels
-
-    def __len__(self):
-        return self.y.shape[0]
-
 class DatasetAge(Dataset):
     """Custom Dataset for loading face images"""
 
@@ -52,7 +21,7 @@ class DatasetAge(Dataset):
         elif self.dataset == 'CACD':
             self.img_paths = df['file'].values
         else:
-            raise ValueError("ERROR nom model")
+            raise ValueError("Incorrect model name introduced.")
         self.y = df['age'].values
         self.transform = transform
         self.loss = loss
@@ -66,7 +35,7 @@ class DatasetAge(Dataset):
             img = self.transform(img)
 
         label = self.y[index]
-        if (self.loss != 'ce'):
+        if self.loss != 'ce':
             levels = [1] * label + [0] * (self.NUM_CLASSES - 1 - label)
             levels = torch.tensor(levels, dtype=torch.float32)
             return img, label, levels
@@ -92,7 +61,7 @@ def return_paths(df):
         ll_df.append('./coral-cnn-master/datasets/tarball-master/AFAD-Full')  # path train
         return ll_df
     else:
-        raise ValueError("ERROR AL INDICAR ELS DATASETS")
+        raise ValueError("Incorrect dataset introduced.")
 
 
 def task_importance_weights(label_array, imp_weight, num_classes):
@@ -155,14 +124,14 @@ def df_loader(train_p, valid_p, test_p, image_p, batch_size, n_workers, loss_dat
 
 
 def cost_fn(nom_model, logits=None, levels=None, imp=None, targets=None):
-    if (nom_model == 'ce'):
+    if nom_model == 'ce':
         return F.cross_entropy(logits, targets)
-    if (nom_model == 'coral'):
+    if nom_model == 'coral':
         val = (-torch.sum((F.logsigmoid(logits) * levels
                            + (F.logsigmoid(logits) - logits) * (1 - levels)) * imp,
                           dim=1))
         return torch.mean(val)
-    if (nom_model == 'ordinal'):
+    if nom_model == 'ordinal':
         val = (-torch.sum((F.log_softmax(logits, dim=2)[:, :, 1] * levels
                            + F.log_softmax(logits, dim=2)[:, :, 0] * (1 - levels)) * imp, dim=1))
         return torch.mean(val)
@@ -170,61 +139,30 @@ def cost_fn(nom_model, logits=None, levels=None, imp=None, targets=None):
         raise ValueError('ERROR EN LA TRIA DE MODEL (cost_fn)')
 
 
-def compute_mae_and_mse_ce(model, data_loader, device):
-    mae, mse, num_examples = 0., 0., 0
-    for i, (features, targets) in enumerate(data_loader):
-        features = features.to(device)
-        targets = targets.to(device)
-        logits, probas = model(features)
-        _, predicted_labels = torch.max(probas, 1)
-        num_examples += targets.size(0)
-        mae += torch.sum(torch.abs(predicted_labels - targets))
-        mse += torch.sum((predicted_labels - targets) ** 2)
-    mae = mae.float() / num_examples
-    mse = mse.float() / num_examples
-    return mae, mse
-
-
-def compute_mae_and_mse_coral(model, data_loader, device):
-    mae, mse, num_examples = 0, 0, 0
-    for i, (features, targets, levels) in enumerate(data_loader):
-        features = features.to(device)
-        targets = targets.to(device)
-
-        logits, probas = model(features)
-        predict_levels = probas > 0.5
-        predicted_labels = torch.sum(predict_levels, dim=1)
-        num_examples += targets.size(0)
-        mae += torch.sum(torch.abs(predicted_labels - targets))
-        mse += torch.sum((predicted_labels - targets) ** 2)
-    mae = mae.float() / num_examples
-    mse = mse.float() / num_examples
-    return mae, mse
-
-
-def compute_mae_and_mse_ordinal(model, data_loader, device):
-    mae, mse, num_examples = 0, 0, 0
-    for i, (features, targets, levels) in enumerate(data_loader):
-        features = features.to(device)
-        targets = targets.to(device)
-
-        logits, probas = model(features)
-        predict_levels = probas > 0.5
-        predicted_labels = torch.sum(predict_levels, dim=1)
-        num_examples += targets.size(0)
-        mae += torch.sum(torch.abs(predicted_labels - targets))
-        mse += torch.sum((predicted_labels - targets) ** 2)
-    mae = mae.float() / num_examples
-    mse = mse.float() / num_examples
-    return mae, mse
-
-
 def compute_mae_and_mse(model, data_loader, device, nom_model):
-    if (nom_model == 'ce'):
-        return compute_mae_and_mse_ce(model, data_loader, device)
-    if (nom_model == 'coral'):
-        return compute_mae_and_mse_coral(model, data_loader, device)
-    if (nom_model == 'ordinal'):
-        return compute_mae_and_mse_ordinal(model, data_loader, device)
-    else:
-        raise ValueError('ERROR EN LA TRIA DE MODEL (compute_mae_and_mse)')
+    mae, mse, num_examples = 0, 0, 0
+    for i, tupla in enumerate(data_loader):
+        if nom_model == 'ce':
+            features = tupla[0]
+            targets = tupla[1]
+            levels = None
+        else:
+            features = tupla[0]
+            targets = tupla[1]
+            levels = tupla[2]
+        features = features.to(device)
+        targets = targets.to(device)
+
+        logits, probas = model(features)
+        if nom_model != 'ce':
+            predict_levels = probas > 0.5
+            predicted_labels = torch.sum(predict_levels, dim=1)
+        else:
+            _, predicted_labels = torch.max(probas, 1)
+
+        num_examples += targets.size(0)
+        mae += torch.sum(torch.abs(predicted_labels - targets))
+        mse += torch.sum((predicted_labels - targets) ** 2)
+    mae = mae.float() / num_examples
+    mse = mse.float() / num_examples
+    return mae, mse
