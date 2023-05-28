@@ -1,4 +1,4 @@
-# AgePrediction Repository
+# xnap-project-matcad_grup_3 Repository
 
 This repository contains the source code for a project divided into two main folders: `coral-cnn-master` and `AgePrediction`.
 
@@ -31,7 +31,7 @@ The following code trains `coral` on the `CACD` dataset:
 
 ```bash
 python main.py --cuda 0 --seed 1
---outpath ./AgePrediction/sortides/predictions
+--outpath ./AgePrediction/sortides/predictions-cacd_coral
 --dataset cacd
 --loss coral
 --starting_params 0
