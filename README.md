@@ -1,28 +1,51 @@
-[![Open in Visual Studio Code](https://classroom.github.com/assets/open-in-vscode-718a45dd9cf7e7f842a935f5ebbe5719a5e09af4491e668f4dbf3b35d5cca122.svg)](https://classroom.github.com/online_ide?assignment_repo_id=11114129&assignment_repo_type=AssignmentRepo)
-# XNAP-Project title (replace it by the title of your project)
-Write here a short summary about your project. The text must include a short introduction and the targeted goals
+# xnap-project-matcad_grup_3 Repository
 
-## Code structure
-You must create as many folders as you consider. You can use the proposed structure or replace it by the one in the base code that you use as starting point. Do not forget to add Markdown files as needed to explain well the code and how to use it.
+This repository contains the source code for a project divided into two main folders: `coral-cnn-master` and `AgePrediction`.
 
-## Example Code
-The given code is a simple CNN example training on the MNIST dataset. It shows how to set up the [Weights & Biases](https://wandb.ai/site)  package to monitor how your network is learning, or not.
+## coral-cnn-master
+The `coral-cnn-master` folder serves as the starting point for the project. It includes several important subfolders:
 
-Before running the code you have to create a local environment with conda and activate it. The provided [environment.yml](https://github.com/DCC-UAB/XNAP-Project/environment.yml) file has all the required dependencies. Run the following command: ``conda env create --file environment.yml `` to create a conda environment with all the required dependencies and then activate it:
+- `model-code`: This directory houses nine executable files, each responsible for training a model over a span of 200 epochs.
+
+- `single-image-prediction_w-pretrained-models`: Here, you can find files that enable the prediction of the age of a single image using pretrained models.
+
+- `experiment-logs`: This folder stores the results of the trained models, including predictions, losses, and model parameters.
+
+For more information about the files in the `coral-cnn-master` folder or to access the download links, please refer to the `coral-cnn-master README`.
+
+## AgePrediction
+The `AgePrediction` folder contains the following structure:
+
+- `models` directory: This directory consists of the `_init_.py` and `models.py` files. They define classes and functions related to the models used in the project. Many of these classes and functions are generalizations of the models found in `coral-cnn-master`, with minor enhancements.
+
+- `utils` directory: Here, you will find the `_init_.py` and `utils.py` files, which define various functions used in the execution files. Most of these functions originate from the starting point code.
+
+- `sortides` directory: This folder serves as the destination for files generated during executions. The `--outpath` parameter should always be specified as a relative path to this folder.
+
+- `main.py`: This is the main executable file, encompassing the project's overarching ideas. It allows for modifications to the dataset or loss using flag parameters, initialization of a pre-trained model for improvement, and predictions using the test dataset.
+
+
+**Example**
+
+The following code trains `coral` on the `CACD` dataset:
+
+```bash
+python main.py --cuda 0 --seed 1
+--outpath ./AgePrediction/sortides/predictions-cacd_coral
+--dataset cacd
+--loss coral
+--starting_params 0
+--state_dict_path /home/xnmaster/projecte/AgePrediction/sortides/cacd-pretrained/cacd-coral__seed1/best_model.pt
 ```
-conda activate xnap-example
-```
 
-To run the example code:
-```
-python main.py
-```
+- `--cuda <int>`: The CUDA device number of the GPU to be used for training 
+(`--cuda 0` refers to the 1st GPU).
+- `--seed <int>`: Integer for the random seed; used for training set shuffling and
+the model weight initialization (note that CUDA convolutions are not fully deterministic).
+- `--outpath <directory>`: Path for saving the training log (`training.log`) 
+and the parameters of the trained model (`model.pt`). 
+- `--dataset <str>`: Flag that indicates the dataset to use (CACD, AFAD).
+- `--loss <str>`: Flag that indicates the loss function to use (ce, coral, ordinal).
+- `--starting_params <int>`: Integer to indicate whether or not to use the best parameters of a pretrained model.
+- `--state_dict_path <directory>`: Path which contains the pretrained model file (best_model.pt).
 
-
-
-## Contributors
-Write here the name and UAB mail of the group members
-
-Xarxes Neuronals i Aprenentatge Profund
-Grau de __Write here the name of your estudies (Artificial Intelligence, Data Engineering or Computational Mathematics & Data analyitics)__, 
-UAB, 2023
