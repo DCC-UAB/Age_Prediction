@@ -1,4 +1,4 @@
-# xnap-project-matcad_grup_3 Repository
+# Age Prediction Project Repository
 
 This repository contains the source code for a project divided into two main folders: `coral-cnn-master` and `AgePrediction`.
 
